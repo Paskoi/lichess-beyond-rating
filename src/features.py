@@ -34,9 +34,9 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def time_split(feat: pd.DataFrame):
-    train = feat[feat["utc_dt"] < VALID_START]
-    valid = feat[(feat["utc_dt"] >= VALID_START) & (feat["utc_dt"] < TEST_START)]
-    test = feat[feat["utc_dt"] >= TEST_START]
+    train = feat[feat["utc_dt"] < VALID_START].copy()
+    valid = feat[(feat["utc_dt"] >= VALID_START) & (feat["utc_dt"] < TEST_START)].copy()
+    test = feat[feat["utc_dt"] >= TEST_START].copy()
     return train, valid, test
 
 
@@ -51,3 +51,8 @@ def apply_eco_vocab(eco: pd.Series, vocab: set) -> pd.Series:
         pd.Categorical(eco.where(eco.isin(vocab), "other"), categories=categories),
         index=eco.index,
     )
+
+def calibration_table(proba_class, y, class_idx, n_bins=10):
+    t = pd.DataFrame({"pred": proba_class, "observed": (y == class_idx)})
+    t["bin"] = (t["pred"] * n_bins).astype(int).clip(upper=n_bins - 1)   # 0 = 0–10%, 1 = 10–20%, ..., 9 = 90–100%
+    return t.groupby("bin")[["pred", "observed"]].mean()
