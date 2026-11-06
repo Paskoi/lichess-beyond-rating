@@ -1,4 +1,3 @@
-#Every rule here is justified in 00_eda_cleaning notebook.
 from pathlib import Path
 
 import pandas as pd
